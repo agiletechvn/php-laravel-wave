@@ -1,25 +1,16 @@
-FROM haakco/stage3-ubuntu-20.04-php7.4-lv
+FROM php:7.4.21-fpm-alpine3.13
 
-USER www-data
+RUN apk add --no-cache zip libzip-dev
+RUN docker-php-ext-configure zip
+RUN docker-php-ext-install zip
+RUN docker-php-ext-install pdo pdo_mysql 
 
-## Cleanout previous dev just in case
-RUN rm -rf /var/www/site/*
 
-ADD --chown=www-data:www-data . /var/www/site
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+RUN php composer-setup.php
+RUN php -r "unlink('composer-setup.php');"
 
-WORKDIR /var/www/site
+RUN mv composer.phar /usr/local/bin/composer
 
-RUN composer install --no-ansi --no-suggest --no-scripts --prefer-dist --no-progress --no-interaction \
-      --optimize-autoloader
-
-USER root
-
-RUN find /usr/share/GeoIP -not -user www-data -execdir chown "www-data:" {} \+ && \
-    find /var/www/site -not -user www-data -execdir chown "www-data:" {} \+
-
-#HEALTHCHECK \
-#  --interval=30s \
-#  --timeout=60s \
-#  --retries=10 \
-#  --start-period=60s \
-#  CMD if [[ "$(curl -f http://127.0.0.1/ | jq -e . >/dev/null 2>&1)" != "0" ]]; then exit 1; else exit 0; fi
+EXPOSE 9000
