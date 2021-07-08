@@ -82,6 +82,34 @@ php artisan db:seed
 
 🎉 And that's it! You will now be able to visit your URL and see your Wave application up and running.
 
+## Install via docker compose
+
+Copy env file
+
+```
+cp .env.example .env
+```
+
+Run docker compose, wait a bit to install composer automatically
+```
+docker-compose up -d
+```
+
+Run migrate and seed files
+
+```
+# goto container ash
+docker exec -it <id> ash
+
+# run migrate
+php artisan migrate
+
+# run seed
+php artisan db:seed
+
+```
+
+
 
 ## Watch, Learn, and Build
 
